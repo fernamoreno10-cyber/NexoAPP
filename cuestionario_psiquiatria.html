@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Examen de Admisión · Psiquiatría</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #141720;
+    --surface2: #1c2030;
+    --accent: #7eb8f7;
+    --accent2: #f0c040;
+    --correct: #4caf82;
+    --wrong: #e05a6a;
+    --text: #e8eaf0;
+    --muted: #6b7390;
+    --border: #252a3a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(126,184,247,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(126,184,247,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* HEADER */
+  .header {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 48px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .header-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+  .header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(28px, 5vw, 44px);
+    font-weight: 900;
+    color: var(--text);
+    line-height: 1.1;
+  }
+  .header h1 span { color: var(--accent); }
+  .header-sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 4px;
+    font-weight: 300;
+  }
+
+  /* PROGRESS */
+  .progress-bar-wrap {
+    background: var(--surface2);
+    border-radius: 2px;
+    height: 4px;
+    margin-bottom: 36px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 2px;
+    transition: width 0.5s ease;
+  }
+  .progress-text {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  /* CATEGORY BADGE */
+  .cat-badge {
+    display: inline-block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 2px;
+    margin-bottom: 16px;
+    border: 1px solid;
+  }
+  .cat-psicopat { color: #a78bfa; border-color: #a78bfa44; background: #a78bfa11; }
+  .cat-farmaco  { color: #67e8f9; border-color: #67e8f944; background: #67e8f911; }
+  .cat-urgencia { color: #fb923c; border-color: #fb923c44; background: #fb923c11; }
+  .cat-persona  { color: #f472b6; border-color: #f472b644; background: #f472b611; }
+  .cat-ley      { color: #86efac; border-color: #86efac44; background: #86efac11; }
+
+  /* QUESTION CARD */
+  .question-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 32px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+    animation: slideIn 0.35s ease;
+  }
+  .question-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .q-number {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .q-text {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(17px, 2.5vw, 20px);
+    line-height: 1.55;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  .q-case {
+    background: var(--surface2);
+    border-left: 3px solid var(--accent);
+    padding: 14px 18px;
+    border-radius: 0 6px 6px 0;
+    margin: 16px 0 24px;
+    font-size: 14px;
+    line-height: 1.7;
+    color: #b0b8d0;
+    font-style: italic;
+  }
+
+  /* OPTIONS */
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 18px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+  }
+  .option:hover:not(:disabled) {
+    border-color: var(--accent);
+    background: #1c2030;
+    transform: translateX(3px);
+  }
+  .option-letter {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    min-width: 20px;
+    margin-top: 1px;
+  }
+  .option-text {
+    font-size: 14px;
+    line-height: 1.55;
+    color: #c8cfe0;
+  }
+  .option.correct {
+    border-color: var(--correct);
+    background: #0d2a1a;
+  }
+  .option.correct .option-letter { color: var(--correct); }
+  .option.wrong {
+    border-color: var(--wrong);
+    background: #2a0d12;
+  }
+  .option.wrong .option-letter { color: var(--wrong); }
+  .option:disabled { cursor: default; }
+
+  /* FEEDBACK */
+  .feedback {
+    margin-top: 20px;
+    padding: 18px 20px;
+    border-radius: 6px;
+    font-size: 14px;
+    line-height: 1.65;
+    animation: fadeUp 0.3s ease;
+    display: none;
+  }
+  .feedback.correct-fb {
+    background: #0d2a1a;
+    border: 1px solid #4caf8244;
+    color: #a7f3c8;
+    display: block;
+  }
+  .feedback.wrong-fb {
+    background: #2a0d12;
+    border: 1px solid #e05a6a44;
+    color: #fca5a5;
+    display: block;
+  }
+  .feedback strong { display: block; margin-bottom: 6px; font-size: 13px; letter-spacing: 0.5px; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ACTIONS */
+  .actions { display: flex; justify-content: flex-end; margin-top: 24px; }
+  .btn-next {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 12px 28px;
+    background: var(--accent);
+    color: #0d0f14;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: none;
+  }
+  .btn-next:hover { background: #a8d4ff; transform: translateY(-1px); }
+  .btn-next.visible { display: block; }
+
+  /* SCORE SCREEN */
+  .score-screen {
+    text-align: center;
+    padding: 60px 20px;
+    animation: slideIn 0.4s ease;
+    display: none;
+  }
+  .score-screen.visible { display: block; }
+  .score-circle {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    border: 3px solid var(--accent);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 32px;
+    position: relative;
+  }
+  .score-circle::before {
+    content: '';
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+  }
+  .score-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 52px;
+    font-weight: 900;
+    line-height: 1;
+    color: var(--accent);
+  }
+  .score-denom {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .score-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    margin-bottom: 12px;
+  }
+  .score-msg {
+    font-size: 14px;
+    color: var(--muted);
+    max-width: 460px;
+    margin: 0 auto 36px;
+    line-height: 1.7;
+  }
+  .score-breakdown {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin: 28px 0 40px;
+    text-align: left;
+  }
+  .score-cat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 16px;
+  }
+  .score-cat-name {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+  .score-cat-val {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .score-cat-val span { font-size: 13px; color: var(--muted); }
+  .btn-restart {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 14px 36px;
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-restart:hover { background: var(--accent); color: #0d0f14; }
+
+  .review-list { margin-top: 48px; text-align: left; }
+  .review-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .review-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+    font-size: 13px;
+  }
+  .review-item .ri-q {
+    font-family: 'Playfair Display', serif;
+    font-size: 15px;
+    margin-bottom: 8px;
+  }
+  .review-item .ri-status {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    margin-bottom: 6px;
+  }
+  .ri-correct { color: var(--correct); }
+  .ri-wrong { color: var(--wrong); }
+  .review-item .ri-exp {
+    color: var(--muted);
+    line-height: 1.6;
+    font-size: 13px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="header-tag">Simulacro · Admisión Especialidad</div>
+    <h1>Psiquiatría <span>·</span> Cuestionario</h1>
+    <div class="header-sub">40 preguntas · Casos clínicos + conceptos clave · Colombia 2026</div>
+  </div>
+
+  <div id="quiz-area">
+    <div class="progress-text">
+      <span id="prog-label">Pregunta 1 de 40</span>
+      <span id="score-label">Correctas: 0</span>
+    </div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" id="prog-bar" style="width:0%"></div>
+    </div>
+    <div id="question-container"></div>
+    <div class="actions">
+      <button class="btn-next" id="btn-next" onclick="nextQuestion()">Siguiente →</button>
+    </div>
+  </div>
+
+  <div class="score-screen" id="score-screen">
+    <div class="score-circle">
+      <div class="score-num" id="final-score">0</div>
+      <div class="score-denom" id="final-total">/ 40</div>
+    </div>
+    <div class="score-title" id="score-title">Resultado</div>
+    <div class="score-msg" id="score-msg"></div>
+    <div class="score-breakdown" id="score-breakdown"></div>
+    <button class="btn-restart" onclick="restartQuiz()">↺ Repetir Cuestionario</button>
+    <div class="review-list" id="review-list"></div>
+  </div>
+</div>
+
+<script>
+const questions = [
+  // ── PSICOPATOLOGÍA ──
+  {
+    cat: "psicopat", catLabel: "Psicopatología",
+    text: "Caso clínico: Mujer de 34 años consulta por llanto frecuente, incapacidad para sentir placer en actividades que antes disfrutaba, insomnio de conciliación y sentimientos de culpa excesiva de 3 semanas de evolución. Trabaja como docente y ha faltado a clases. Niega ideación suicida. ¿Cuál es el diagnóstico más probable?",
+    opts: ["Trastorno de adaptación con ánimo deprimido","Trastorno depresivo mayor","Distimia (trastorno depresivo persistente)","Trastorno bipolar II, episodio depresivo"],
+    correct: 1,
+    exp: "Trastorno depresivo mayor (TDM): requiere ≥5 síntomas durante ≥2 semanas, incluyendo obligatoriamente ánimo deprimido O anhedonia. La paciente presenta anhedonia, llanto, insomnio, culpa y deterioro funcional. La distimia dura ≥2 años con síntomas más leves. El trastorno de adaptación se relaciona directamente con un estresor identificable. No hay datos de hipomanía previa para considerar bipolar II."
+  },
+  {
+    cat: "psicopat", catLabel: "Psicopatología",
+    text: "Hombre de 27 años es traído por su familia. Lleva 8 meses con la convicción de que sus vecinos conspiran para dañarlo, escucha voces que comentan sus acciones y ha dejado de trabajar. Nunca ha tenido un episodio de ánimo prominente. ¿Cuál es el diagnóstico que cumple criterios?",
+    opts: ["Trastorno delirante","Trastorno esquizoafectivo","Esquizofrenia","Trastorno psicótico breve"],
+    correct: 2,
+    exp: "Esquizofrenia (DSM-5): ≥2 síntomas de la fase activa (delirios, alucinaciones, discurso desorganizado, comportamiento desorganizado, síntomas negativos) durante ≥1 mes, con disfunción en al menos un área y duración total ≥6 meses. El trastorno delirante solo tiene delirios sin alucinaciones prominentes. El trastorno psicótico breve dura <1 mes. El esquizoafectivo requiere un episodio de ánimo concurrente."
+  },
+  {
+    cat: "psicopat", catLabel: "Psicopatología",
+    text: "Paciente de 52 años ingresa al servicio de urgencias con confusión de inicio abrupto (hace 6 horas), desorientación en tiempo y espacio, fluctuación del estado de conciencia, alucinaciones visuales de insectos y agitación. La familia refiere que antes estaba «bien». ¿Cuál es la diferencia clave que apunta a DELIRIUM y no a demencia?",
+    opts: ["La presencia de alucinaciones visuales","El inicio agudo y la fluctuación del nivel de conciencia","La desorientación en tiempo y espacio","La agitación psicomotriz"],
+    correct: 1,
+    exp: "El inicio AGUDO (horas-días) y la FLUCTUACIÓN del nivel de conciencia son los rasgos distintivos del delirium. La demencia tiene inicio insidioso y progresivo, con conciencia conservada hasta etapas avanzadas. Las alucinaciones visuales y la agitación pueden ocurrir en ambos. Siempre buscar causa orgánica en delirium (infección, fármacos, metabólica)."
+  },
+  {
+    cat: "psicopat", catLabel: "Psicopatología",
+    text: "Una mujer de 23 años con diagnóstico de trastorno bipolar I tiene actualmente: euforia marcada, habla acelerada, ha dormido 2 horas en 3 días, gastó los ahorros de su familia en 2 días, tiene planes grandiosos de «crear una startup millonaria» y ha tenido relaciones sexuales de riesgo. ¿Cuántos días mínimos deben estar presentes estos síntomas para cumplir criterio de episodio maníaco?",
+    opts: ["2 días","4 días","7 días (o cualquier duración si requiere hospitalización)","14 días"],
+    correct: 2,
+    exp: "DSM-5: el episodio maníaco requiere ≥7 días consecutivos de ánimo elevado/expansivo/irritable y aumento de energía, o cualquier duración si es suficientemente grave para requerir hospitalización o hay síntomas psicóticos. En cambio, el episodio HIPOMANÍACO (bipolar II) requiere mínimo 4 días y no causa deterioro marcado ni hospitalización."
+  },
+  {
+    cat: "psicopat", catLabel: "Psicopatología",
+    text: "Hombre de 40 años refiere preocupación excesiva y difícil de controlar sobre múltiples temas (trabajo, salud, dinero) durante más de 6 meses. Presenta tensión muscular, irritabilidad, fatiga y dificultad para concentrarse. No tiene episodios de pánico delimitados. ¿Diagnóstico?",
+    opts: ["Trastorno de pánico","Trastorno de ansiedad generalizada (TAG)","Trastorno de adaptación con ansiedad","Trastorno de ansiedad por enfermedad"],
+    correct: 1,
+    exp: "TAG (DSM-5): preocupación excesiva y difícil de controlar sobre varios temas, ≥6 meses, con ≥3 síntomas (de: tensión muscular, fatiga, irritabilidad, dificultad para concentrarse, alteración del sueño, inquietud). La diferencia con trastorno de pánico es que este último tiene ataques agudos delimitados con síntomas autonómicos intensos y miedo a «perder el control»."
+  },
+  {
+    cat: "psicopat", catLabel: "Psicopatología",
+    text: "Mujer de 19 años presenta ideas recurrentes e intrusivas de contaminar a otros con gérmenes (las reconoce como irracionales), que la generan ansiedad intensa. Para aliviarla se lava las manos durante horas. Esto le consume 4 horas al día. ¿Diagnóstico?",
+    opts: ["Trastorno de ansiedad generalizada","Trastorno obsesivo-compulsivo (TOC)","Hipocondría","Fobia específica"],
+    correct: 1,
+    exp: "TOC: obsesiones (pensamientos intrusivos, persistentes, que generan malestar) + compulsiones (actos repetitivos para reducir la ansiedad). Las obsesiones son egodistónicas (el paciente las reconoce como ajenas/irracionales). El criterio temporal es >1 hora al día o interferencia significativa. Tratamiento de primera línea: TCC con exposición y prevención de respuesta + ISRS (fluvoxamina, fluoxetina)."
+  },
+  {
+    cat: "psicopat", catLabel: "Psicopatología",
+    text: "Adolescente de 16 años que 3 meses después de ser víctima de asalto, presenta pesadillas recurrentes del evento, evita el lugar donde ocurrió, está hipervigilante, tiene reacciones exageradas de sobresalto y se siente «ajeno a sí mismo» a veces. ¿Diagnóstico?",
+    opts: ["Trastorno de adaptación","Trastorno de estrés agudo","Trastorno de estrés postraumático (TEPT)","Trastorno de despersonalización"],
+    correct: 2,
+    exp: "TEPT: el evento traumático ocurrió hace >1 mes (si fuera <1 mes sería trastorno de estrés agudo). Criterios: reexperimentación (pesadillas, flashbacks), evitación de estímulos relacionados, alteraciones cognitivas/del ánimo, hiperactivación (hipervigilancia, sobresalto). El trastorno de adaptación tiene síntomas desproporcionados a un estresor identificable pero sin cumplir criterios de TEPT."
+  },
+  {
+    cat: "psicopat", catLabel: "Psicopatología",
+    text: "Hombre de 60 años con deterioro cognitivo progresivo de 2 años: pérdida de memoria episódica, dificultad para encontrar palabras, desorientación en lugares conocidos y cambios de personalidad. La familia dice que «ya no es él». TAC muestra atrofia en regiones temporoparietales. ¿Diagnóstico más probable?",
+    opts: ["Delirium de inicio tardío","Demencia frontotemporal","Enfermedad de Alzheimer","Demencia por cuerpos de Lewy"],
+    correct: 2,
+    exp: "Enfermedad de Alzheimer: demencia de inicio insidioso y progresivo, predominio de síntomas amnésicos (memoria episódica), afasia (dificultad para encontrar palabras), con atrofia temporoparietal en neuroimagen. La demencia por cuerpos de Lewy tiene alucinaciones visuales vívidas, parkinsonismo y fluctuaciones cognitivas. La frontotemporal debuta con cambios de personalidad y conducta (no memoria). El delirium es agudo."
+  },
+
+  // ── PSICOFARMACOLOGÍA ──
+  {
+    cat: "farmaco", catLabel: "Psicofarmacología",
+    text: "Paciente con diagnóstico de trastorno depresivo mayor inicia tratamiento con sertralina. A las 2 semanas consulta por confusión, agitación, diaforesis profusa, temblor, mioclonías y fiebre de 38.8°C. Había iniciado tramadol por dolor de espalda una semana antes. ¿Cuál es el diagnóstico de esta complicación?",
+    opts: ["Síndrome neuroléptico maligno","Síndrome serotoninérgico","Crisis maníaca inducida por ISRS","Reacción distónica aguda"],
+    correct: 1,
+    exp: "Síndrome serotoninérgico: tríada de alteración mental (agitación/confusión) + hiperactividad autonómica (diaforesis, fiebre, taquicardia) + anomalías neuromusculares (temblor, mioclonías, hiperreflexia). Se produce por exceso de serotonina, típicamente por combinación de sertralina (ISRS) + tramadol (que también tiene efecto serotoninérgico). Tratamiento: suspender fármacos, soporte, ciproheptadina en casos graves. El SNM se distingue por rigidez en «tubo de plomo» y CK muy elevada."
+  },
+  {
+    cat: "farmaco", catLabel: "Psicofarmacología",
+    text: "Mujer de 32 años con trastorno bipolar I en tratamiento con litio refiere náuseas, temblor grueso de manos, ataxia y confusión. ¿Cuál es el nivel sérico de litio que indica toxicidad clínica significativa?",
+    opts: ["Mayor de 0.6 mEq/L","Mayor de 1.2 mEq/L","Mayor de 1.5 mEq/L","Mayor de 2.0 mEq/L"],
+    correct: 2,
+    exp: "Niveles terapéuticos de litio: 0.6–1.2 mEq/L (mantenimiento) y hasta 1.2–1.5 mEq/L en mania aguda. TOXICIDAD: >1.5 mEq/L → síntomas GI y neurológicos leves (náuseas, temblor grueso, ataxia). >2.0 mEq/L → confusión, convulsiones, daño renal. >2.5 mEq/L → riesgo vital. Factores que elevan litio: deshidratación, AINEs, diuréticos tiazídicos. Ante sospecha: dosificar litemia de inmediato."
+  },
+  {
+    cat: "farmaco", catLabel: "Psicofarmacología",
+    text: "Paciente esquizofrénico con múltiples recaídas a pesar de haber recibido dos antipsicóticos diferentes a dosis adecuadas. ¿Cuál es el fármaco de elección para esquizofrenia resistente al tratamiento?",
+    opts: ["Haloperidol depot","Olanzapina","Clozapina","Risperidona en dosis alta"],
+    correct: 2,
+    exp: "Clozapina es el único fármaco aprobado para esquizofrenia RESISTENTE (fracaso de ≥2 antipsicóticos a dosis y duración adecuadas). Es el más eficaz pero requiere monitorización estricta de hemograma por riesgo de AGRANULOCITOSIS (<1% pero potencialmente fatal). También reduce riesgo suicida. Efectos adversos: sedación, hipotensión ortostática, sialorrea, síndrome metabólico. NUNCA combinar con clozapina: benzodiacepinas IV (riesgo de paro cardiorrespiratorio)."
+  },
+  {
+    cat: "farmaco", catLabel: "Psicofarmacología",
+    text: "Paciente con esquizofrenia inicia haloperidol. A las 2 horas presenta contractura involuntaria del cuello hacia atrás (tortícolis), desviación ocular hacia arriba (crisis oculogira) y dolor intenso. ¿Cuál es el diagnóstico y el tratamiento inmediato?",
+    opts: ["Acatisia → propranolol","Discinesia tardía → suspender antipsicótico","Distonía aguda → biperideno o difenhidramina IV","Síndrome neuroléptico maligno → dantroleno"],
+    correct: 2,
+    exp: "DISTONÍA AGUDA: espasmos musculares involuntarios que ocurren horas-días después de iniciar un antipsicótico típico (especialmente haloperidol). Es un síntoma extrapiramidal (EPS). Tratamiento inmediato: anticolinérgicos IM/IV como biperideno (2mg IM) o difenhidramina. La acatisia es inquietud subjetiva (se trata con propranolol o benzodiacepinas). La discinesia tardía es tardía (meses-años). El SNM incluye fiebre, rigidez severa y CK elevada."
+  },
+  {
+    cat: "farmaco", catLabel: "Psicofarmacología",
+    text: "Mujer de 45 años con trastorno bipolar II está en segundo trimestre de embarazo. Necesita estabilizador del ánimo. ¿Cuál es el más seguro en este contexto?",
+    opts: ["Litio","Ácido valproico","Carbamazepina","Lamotrigina"],
+    correct: 3,
+    exp: "En embarazo: LITIO → malformación de Ebstein (cardíaca, especialmente 1er trimestre), reducir dosis al parto. VALPROATO → alta teratogenicidad (defectos tubo neural, síndrome valproato fetal), CONTRAINDICADO en embarazo cuando hay alternativas. CARBAMAZEPINA → defectos de tubo neural. LAMOTRIGINA → el más seguro disponible, aunque no es 100% libre de riesgo; preferida en bipolar II (componente depresivo) durante gestación. Siempre evaluar riesgo/beneficio con especialista."
+  },
+  {
+    cat: "farmaco", catLabel: "Psicofarmacología",
+    text: "Hombre de 38 años con depresión mayor que no ha respondido a dos ensayos de ISRS. El médico decide iniciar una combinación. ¿Cuál de las siguientes combinaciones está CONTRAINDICADA por riesgo de síndrome serotoninérgico grave?",
+    opts: ["ISRS + bupropión","ISRS + IMAO (fenelzina)","ISRS + mirtazapina","ISRS + litio (augmentación)"],
+    correct: 1,
+    exp: "ISRS + IMAO: combinación CONTRAINDICADA. Los IMAO (fenelzina, tranilcipromina) inhiben la degradación de serotonina; al añadir un ISRS se produce hiperserotonismo severo con riesgo vital. Período de lavado obligatorio: al suspender un ISRS, esperar ≥2 semanas antes de iniciar IMAO (≥5 semanas si era fluoxetina por su larga vida media). La combinación ISRS + litio es estrategia válida de potenciación. ISRS + mirtazapina (California Rocket Fuel) es una estrategia combinada usada en depresión resistente."
+  },
+  {
+    cat: "farmaco", catLabel: "Psicofarmacología",
+    text: "Paciente con trastorno de pánico. ¿Cuál es el fármaco de primera línea según la evidencia actual?",
+    opts: ["Alprazolam (benzodiacepina)","ISRS (ej: sertralina o paroxetina)","Buspirona","Antipsicótico atípico"],
+    correct: 1,
+    exp: "ISRS son la primera línea para trastorno de pánico (y para la mayoría de trastornos de ansiedad). La paroxetina tiene indicación específica en pánico. Las benzodiacepinas pueden usarse a CORTO PLAZO en la fase aguda, pero no son de primera línea por riesgo de dependencia y no abordan la fisiopatología subyacente. La buspirona es útil en TAG pero no en pánico. La TCC combinada con farmacoterapia ofrece los mejores resultados."
+  },
+  {
+    cat: "farmaco", catLabel: "Psicofarmacología",
+    text: "Paciente en urgencias con agitación psicomotriz grave, psicótico, sin acceso IV. ¿Cuál es la combinación IM de primera línea para el manejo agudo?",
+    opts: ["Clozapina IM + diazepam IM","Haloperidol IM + lorazepam IM","Litio VO + quetiapina IM","Valproato IV + risperidona IM"],
+    correct: 1,
+    exp: "Manejo de agitación psicomotriz: HALOPERIDOL IM (antipsicótico típico, rápida acción) + LORAZEPAM IM (benzodiacepina para sedación rápida). Esta combinación es la más usada. Alternativa: olanzapina IM (no combinar con lorazepam IM por riesgo de depresión respiratoria). La contención química precede o acompaña a la contención mecánica, que solo se usa si hay riesgo inmediato. Clozapina NO existe en presentación IM."
+  },
+  {
+    cat: "farmaco", catLabel: "Psicofarmacología",
+    text: "Paciente masculino de 55 años con esquizofrenia crónica desarrolla movimientos involuntarios repetitivos de la boca, lengua (protrusión), muecas faciales y movimientos coreoatetósicos de manos, luego de 10 años con haloperidol. ¿Diagnóstico?",
+    opts: ["Distonía aguda","Acatisia","Discinesia tardía","Síndrome de Tourette"],
+    correct: 2,
+    exp: "DISCINESIA TARDÍA: movimientos involuntarios orofaciales y/o de extremidades que aparecen después de meses o años de uso de antipsicóticos bloqueadores de dopamina. Es potencialmente irreversible. Prevención: usar dosis mínima efectiva, preferir atípicos sobre típicos. Tratamiento: reducir/cambiar antipsicótico, valorar valbenazina o deutetrabenazina (inhibidores VMAT2). La distonía aguda ocurre en horas-días. La acatisia es inquietud motora subjetiva y objetiva."
+  },
+
+  // ── URGENCIAS ──
+  {
+    cat: "urgencia", catLabel: "Psiquiatría de Urgencias",
+    text: "Mujer de 29 años acude a urgencias con antecedente de intento de suicidio hace 1 año. Hoy refiere ideación suicida activa, tiene un plan definido (ingesta de pastillas que ya tiene en casa) y expresa la intención de hacerlo esta noche. ¿Cuál es la conducta correcta INMEDIATA?",
+    opts: ["Citar control en psiquiatría ambulatoria en 48 horas","Iniciar antidepresivo y dar alta con red de apoyo","Hospitalización involuntaria en unidad de psiquiatría","Llamar a la familia para que la vigile en casa"],
+    correct: 2,
+    exp: "Riesgo ALTO e INMINENTE: ideación activa + plan específico + intención + acceso a medios + antecedente de intento previo. Indicación de HOSPITALIZACIÓN INVOLUNTARIA (Ley 1616/2013, Colombia). La decisión no requiere consentimiento del paciente cuando hay riesgo vital inminente para sí mismo. El médico psiquiatra debe documentar el riesgo. El alta con red de apoyo es inadecuada ante este perfil de riesgo. La Escala Columbia (C-SSRS) ayuda a estructurar la evaluación."
+  },
+  {
+    cat: "urgencia", catLabel: "Psiquiatría de Urgencias",
+    text: "Hombre de 45 años con abstinencia de alcohol ingresa a urgencias. Lleva 72 horas sin beber. Presenta temblor, diaforesis, taquicardia, hipertensión y está comenzando a ver «bichos en las paredes». ¿Cuál es el tratamiento de primera línea para prevenir una convulsión o delirium tremens?",
+    opts: ["Haloperidol para las alucinaciones","Benzodiacepinas (diazepam o lorazepam)","Naltrexona","Disulfiram"],
+    correct: 1,
+    exp: "Abstinencia de alcohol grave → BENZODIACEPINAS son el tratamiento de elección (diazepam o clordiazepóxido de larga acción, o lorazepam si hay hepatopatía). Actúan sobre receptores GABA, contrarrestando la hiperexcitabilidad del SNC propia de la abstinencia. El riesgo mayor es el delirium tremens (fiebre, confusión, convulsiones, inestabilidad autonómica) que puede ser mortal. Siempre agregar tiamina ANTES de la glucosa para evitar encefalopatía de Wernicke."
+  },
+  {
+    cat: "urgencia", catLabel: "Psiquiatría de Urgencias",
+    text: "Paciente de 31 años traído por sobredosis de heroína. Está estuporoso, con frecuencia respiratoria de 6 rpm, pupilas puntiformes y cianosis perioral. ¿Cuál es el tratamiento de urgencia?",
+    opts: ["Flumazenil IV","Naloxona IV o IM","Buprenorfina sublingual","N-acetilcisteína IV"],
+    correct: 1,
+    exp: "Sobredosis de opioides: tríada clásica de depresión respiratoria + miosis + disminución del nivel de conciencia. NALOXONA (antagonista opioide puro) es el antídoto. Dosis: 0.4–2 mg IV/IM/SC, puede repetirse cada 2–3 minutos hasta recuperar FR. Vida media corta (30–90 min): puede necesitarse perfusión continua o dosis repetidas, especialmente con opioides de larga acción. Flumazenil es el antídoto de benzodiacepinas. N-acetilcisteína para paracetamol."
+  },
+  {
+    cat: "urgencia", catLabel: "Psiquiatría de Urgencias",
+    text: "Paciente masculino de 68 años, hospitalizado por neumonía, recibe tratamiento con ciprofloxacino y corticoides. Al 3er día presenta confusión intensa con alucinaciones visuales de personas pequeñas, desorientación nocturna con agitación y calma relativa en el día. ¿Cuál es el manejo inicial correcto?",
+    opts: ["Iniciar quetiapina a dosis altas como antipsicótico de mantenimiento","Buscar y tratar la causa subyacente + medidas no farmacológicas","Iniciar benzodiacepinas para la agitación nocturna","Hacer punción lumbar urgente para descartar meningitis"],
+    correct: 1,
+    exp: "Delirium en paciente hospitalizado: lo PRIMERO es identificar y tratar la causa subyacente (en este caso evaluar si la ciprofloxacina o los corticoides contribuyen, descartar hipoxia, infección no controlada, alteraciones metabólicas, dolor, retención urinaria, constipación). Las medidas no farmacológicas son prioritarias: orientación frecuente, luz ambiental, presencia de familiar, movilización precoz, ciclo sueño-vigilia. Los antipsicóticos (haloperidol, quetiapina) se usan solo si hay agitación que pone en riesgo al paciente. Las BZD están CONTRAINDICADAS en delirium (excepto abstinencia alcohólica)."
+  },
+  {
+    cat: "urgencia", catLabel: "Psiquiatría de Urgencias",
+    text: "Un médico detecta que su paciente con esquizofrenia tratada con haloperidol presenta fiebre de 40°C, rigidez muscular «en tubo de plomo», diaforesis profusa, taquicardia y nivel de conciencia fluctuante. CK elevada. ¿Diagnóstico?",
+    opts: ["Síndrome serotoninérgico","Golpe de calor","Síndrome neuroléptico maligno (SNM)","Crisis convulsiva febril"],
+    correct: 2,
+    exp: "SNM: complicación grave e idiosincrásica de antipsicóticos. Tríada: FIEBRE alta + RIGIDEZ muscular (en tubo de plomo) + DISFUNCIÓN AUTONÓMICA (taquicardia, diaforesis, labilidad PA). CK muy elevada (rabdomiólisis). Mortalidad ~10%. Diferencia con síndrome serotoninérgico: SNM → rigidez en tubo de plomo, inicio más gradual (días). Serotoninérgico → hiperreflexia, clonus, inicio más rápido (horas). Tratamiento SNM: suspender antipsicótico, soporte UCI, dantroleno, bromocriptina."
+  },
+
+  // ── PERSONALIDAD ──
+  {
+    cat: "persona", catLabel: "Trastornos de Personalidad",
+    text: "Mujer de 26 años con historia de relaciones inestables («o me adoran o me odian»), miedo intenso al abandono, automutilaciones recurrentes en brazos cuando se siente sola, impulsividad (gasto compulsivo, promiscuidad) y cambios de humor que duran horas. ¿Diagnóstico?",
+    opts: ["Trastorno bipolar II","Trastorno de personalidad histriónico","Trastorno de personalidad límite (Borderline)","Trastorno de personalidad narcisista"],
+    correct: 2,
+    exp: "Trastorno de personalidad límite (TLP / Borderline): patrón de inestabilidad en relaciones interpersonales (idealización-devaluación), autoimagen, afectos e impulsividad marcada. Criterios clave: miedo intenso al abandono, relaciones caóticas, inestabilidad de identidad, impulsividad (≥2 áreas), conductas autolíticas o automutilación, inestabilidad afectiva (que dura horas, no días), sentimientos de vacío. Tratamiento: Terapia Dialéctico-Conductual (TDC) de Linehan es la de primera línea."
+  },
+  {
+    cat: "persona", catLabel: "Trastornos de Personalidad",
+    text: "Hombre de 35 años con antecedente de conducta antisocial desde los 15 años: engaños repetidos, agresiones, violación de normas, ausencia total de remordimiento. Actualmente está en prisión por estafa. ¿A qué clúster pertenece este trastorno?",
+    opts: ["Clúster A (raro/excéntrico)","Clúster B (dramático/emocional)","Clúster C (ansioso/temeroso)","No es un trastorno de personalidad del DSM-5"],
+    correct: 1,
+    exp: "Trastorno de personalidad ANTISOCIAL pertenece al CLÚSTER B (dramático, emocional, errático), junto con: Histriónico, Narcisista y Límite (Borderline). Clúster A: Paranoide, Esquizoide, Esquizotípico. Clúster C: Evasivo, Dependiente, Obsesivo-compulsivo. El antisocial requiere que el patrón haya iniciado en la adolescencia (como trastorno de conducta) y el sujeto tenga ≥18 años. Diagnóstico diferencial importante en contexto forense."
+  },
+  {
+    cat: "persona", catLabel: "Trastornos de Personalidad",
+    text: "Hombre de 50 años, perfeccionista extremo, incapaz de delegar, dedicado exclusivamente al trabajo, colecciona objetos «por si acaso», rígido en sus valores morales y muy inflexible al cambio. Esto le genera conflictos laborales y familiares. ¿Diagnóstico?",
+    opts: ["TOC (trastorno obsesivo-compulsivo)","Trastorno de personalidad obsesivo-compulsivo (TPOC)","Trastorno de personalidad evasivo","Trastorno de personalidad dependiente"],
+    correct: 1,
+    exp: "TPOC: patrón de preocupación por el orden, perfeccionismo, control mental e interpersonal. Diferencia CLAVE con TOC: en el TPOC NO hay obsesiones ni compulsiones definidas, es un estilo de personalidad EGOSINTÓNICO (el paciente no lo ve como problema). En el TOC, las obsesiones son egodistónicas (causan malestar). El TPOC pertenece al clúster C. La acumulación en TPOC es por funcionalidad, no por angustia como en el trastorno de acumulación."
+  },
+  {
+    cat: "persona", catLabel: "Trastornos de Personalidad",
+    text: "Hombre de 42 años que desconfía de todos, incluyendo su esposa (a quien cree infiel sin pruebas), colegas (cree que lo sabotean) y amigos (cree que lo explotan). Rara vez confía en nadie. No tiene síntomas psicóticos. ¿Diagnóstico y clúster?",
+    opts: ["Esquizofrenia paranoide · Clúster A","Trastorno delirante, tipo celos · Clúster B","Trastorno de personalidad paranoide · Clúster A","Trastorno de personalidad antisocial · Clúster B"],
+    correct: 2,
+    exp: "Trastorno de personalidad PARANOIDE (Clúster A): patrón generalizado de desconfianza y suspicacia, SIN síntomas psicóticos propiamente dichos (no hay delirios estructurados ni alucinaciones). Los pacientes interpretan las intenciones de los demás como maliciosas. Diferencia con trastorno delirante: en el delirante hay delirios encapsulados y el funcionamiento general está relativamente preservado. Clúster A: Paranoide, Esquizoide, Esquizotípico (los «raros»)."
+  },
+
+  // ── LEGISLACIÓN ──
+  {
+    cat: "ley", catLabel: "Legislación Colombiana",
+    text: "Un paciente con trastorno mental severo se niega a ingresar a hospitalización psiquiátrica a pesar de presentar riesgo grave para su propia vida. Según la Ley 1616 de 2013, ¿bajo qué figura puede realizarse el internamiento sin su consentimiento?",
+    opts: ["Internamiento de urgencias (solo si está inconsciente)","Internamiento involuntario con concepto de psiquiatra y aprobación judicial inmediata","Internamiento involuntario cuando hay riesgo para sí mismo o terceros, con concepto médico-psiquiátrico","No puede realizarse nunca sin consentimiento del paciente"],
+    correct: 2,
+    exp: "Ley 1616/2013, Art. 18: INTERNAMIENTO INVOLUNTARIO procede cuando el equipo de salud mental determina que el paciente no está en condiciones de decidir por sí mismo y existe riesgo para su vida, la de terceros o daño irreversible a su salud. Requisitos: concepto de psiquiatra, notificación al Ministerio Público, duración máxima inicial de 30 días (prorrogable). No requiere orden judicial previa pero sí notificación. Es diferente al internamiento de urgencia (para situaciones agudas inmediatas)."
+  },
+  {
+    cat: "ley", catLabel: "Legislación Colombiana",
+    text: "¿Cuál es el tiempo mínimo que debe conservarse una historia clínica en Colombia según la normativa vigente (Resolución 1995/1999)?",
+    opts: ["5 años","10 años","15 años","20 años"],
+    correct: 3,
+    exp: "Resolución 1995/1999: la historia clínica debe conservarse por un mínimo de 20 AÑOS desde la última atención. Excepciones: HC de menores de edad se conserva hasta que el paciente cumpla 25 años (si es mayor plazo). HC de víctimas de violaciones de derechos humanos o crímenes de lesa humanidad: se duplica (40 años) o conserva permanentemente. La HC NO puede eliminarse mientras esté activa o existan procesos legales pendientes."
+  },
+  {
+    cat: "ley", catLabel: "Legislación Colombiana",
+    text: "Un paciente con esquizofrenia ingresa voluntariamente a hospitalización psiquiátrica. Al tercer día solicita el alta. El equipo considera que aún hay riesgo. ¿Qué debe ocurrir legalmente?",
+    opts: ["Se le da el alta inmediata porque el internamiento era voluntario","El equipo puede convertirlo en internamiento involuntario si se justifica el riesgo","El paciente debe firmar un alta voluntaria y el médico no tiene responsabilidad","El juez debe decidir en 24 horas"],
+    correct: 1,
+    exp: "Ley 1616/2013: el internamiento voluntario puede CONVERTIRSE en involuntario si durante la hospitalización el equipo de salud mental determina que el paciente no puede decidir libremente por sí mismo y existe riesgo para su vida o la de terceros. El médico psiquiatra debe emitir concepto, notificar al Ministerio Público y documentar el cambio de modalidad. El paciente conserva sus derechos (comunicación, información, trato digno) independientemente de la modalidad de internamiento."
+  },
+  {
+    cat: "ley", catLabel: "Legislación Colombiana",
+    text: "Un médico psiquiatra es requerido para revelar información de la historia clínica de su paciente. ¿En cuál de los siguientes casos el médico DEBE revelar la información?",
+    opts: ["Cuando el empleador del paciente la solicita para evaluar si puede trabajar","Cuando la solicita otro médico tratante sin consentimiento del paciente","Cuando hay una orden judicial en el marco de una investigación penal","Cuando el paciente lo autoriza verbalmente en la consulta"],
+    correct: 2,
+    exp: "La historia clínica es CONFIDENCIAL. Solo puede revelarse sin consentimiento del paciente en: (1) orden judicial escrita, (2) riesgo inminente para terceros identificados, (3) denuncia de violencia o abuso cuando la ley lo obliga, (4) salud pública (enfermedades de notificación obligatoria). El empleador NO tiene derecho a la HC. Otro médico necesita consentimiento del paciente o autorización legal. La autorización verbal es insuficiente para propósitos legales; debe ser escrita."
+  },
+  {
+    cat: "ley", catLabel: "Legislación Colombiana",
+    text: "La Ley 1616 de 2013 establece que la atención en salud mental debe ser en el nivel de menor restricción posible. ¿Cuál de los siguientes niveles representa la atención MÁS restrictiva?",
+    opts: ["Consulta ambulatoria de psiquiatría","Hospital de día (hospitalización parcial)","Unidad de hospitalización psiquiátrica cerrada","Centro de atención primaria en salud mental"],
+    correct: 2,
+    exp: "La Ley 1616 promueve la DESINSTITUCIONALIZACIÓN y el enfoque comunitario. Los niveles de atención de menor a mayor restricción: (1) Atención primaria/comunitaria, (2) Consulta ambulatoria especializada, (3) Hospital de día o hospitalización parcial, (4) Hospitalización aguda (mayor restricción). El principio rector es atender al paciente en el entorno MENOS RESTRICTIVO que permita su tratamiento seguro. La hospitalización es el último recurso, no el primero."
+  },
+
+  // ── MÁS PSICOPATOLOGÍA/MIXTOS ──
+  {
+    cat: "psicopat", catLabel: "Psicopatología",
+    text: "Niña de 8 años es llevada al médico por sus padres que refieren que «no para quieta», interrumpe constantemente, no puede esperar su turno, pierde sus objetos frecuentemente, se distrae con cualquier cosa y no termina las tareas. Estos síntomas están presentes en casa y en el colegio desde los 5 años. ¿Diagnóstico y tratamiento de primera línea en Colombia?",
+    opts: ["Trastorno de conducta → terapia conductual únicamente","TDAH subtipo combinado → metilfenidato + TCC","Trastorno del espectro autista → intervención temprana","Trastorno de ansiedad por separación → sertralina"],
+    correct: 1,
+    exp: "TDAH SUBTIPO COMBINADO (criterios de inatención + hiperactividad/impulsividad, ≥6 síntomas en cada categoría, desde antes de los 12 años, en ≥2 entornos, con deterioro funcional). Tratamiento de primera línea en ≥6 años: METILFENIDATO (estimulante) + intervención psicosocial (TCC, apoyo escolar). En menores de 6 años o si los estimulantes no son tolerados: terapia conductual primero. El metilfenidato mejora la inatención al aumentar dopamina y noradrenalina en corteza prefrontal."
+  },
+  {
+    cat: "psicopat", catLabel: "Psicopatología",
+    text: "Mujer de 18 años con IMC de 15.8 kg/m², amenorrea de 6 meses, que se percibe «gorda» a pesar de estar notoriamente delgada, y restringe severamente su alimentación. Niega tener un problema. ¿Diagnóstico?",
+    opts: ["Bulimia nerviosa","Trastorno por atracón","Anorexia nerviosa","Trastorno de evitación/restricción de la ingesta"],
+    correct: 2,
+    exp: "ANOREXIA NERVIOSA: restricción calórica que lleva a peso significativamente bajo + miedo intenso a ganar peso o conductas que interfieren con el aumento de peso + alteración de la percepción de la imagen corporal (distorsión). En DSM-5 se eliminó el criterio de amenorrea obligatoria (para incluir a hombres y mujeres sin menstruación). IMC <17.5 era el criterio CIE-10. Complicaciones médicas graves: arritmias (hipokalemia), osteoporosis, falla orgánica múltiple. Mayor mortalidad de todos los trastornos psiquiátricos."
+  },
+  {
+    cat: "psicopat", catLabel: "Psicopatología",
+    text: "Mujer de 22 años con peso normal que tiene episodios recurrentes (≥2/semana por 3 meses) de ingesta de grandes cantidades de comida con sensación de pérdida de control, seguidos de vómito autoinducido, uso de laxantes y ejercicio excesivo para «compensar». ¿Diagnóstico?",
+    opts: ["Anorexia nerviosa subtipo purgativo","Bulimia nerviosa","Trastorno por atracón","Trastorno de la conducta alimentaria no especificado"],
+    correct: 1,
+    exp: "BULIMIA NERVIOSA: episodios recurrentes de atracón (ingesta de gran cantidad de alimento en poco tiempo + sensación de pérdida de control) + conductas compensatorias inapropiadas recurrentes (purga, laxantes, ayuno, ejercicio excesivo) + al menos 1 vez/semana por 3 meses + autoevaluación indebidamente influenciada por la figura y el peso. El peso SUELE SER NORMAL (diferencia con anorexia). Tratamiento: TCC + ISRS (fluoxetina a dosis altas, 60mg, es el único con indicación FDA para bulimia)."
+  },
+  {
+    cat: "farmaco", catLabel: "Psicofarmacología",
+    text: "Paciente de 70 años con demencia tipo Alzheimer moderada. ¿Cuál es el fármaco con mayor evidencia para enlentecer el deterioro cognitivo en esta etapa?",
+    opts: ["Memantina (antagonista NMDA)","Donepezilo (inhibidor de acetilcolinesterasa)","Rivastigmina + memantina (combinación)","Haloperidol para los síntomas conductuales"],
+    correct: 2,
+    exp: "En Alzheimer MODERADO a severo: la combinación INHIBIDOR DE ACETILCOLINESTERASA (donepezilo, rivastigmina, galantamina) + MEMANTINA ofrece el mayor beneficio. En leve a moderado: inhibidores de AChE solos. La memantina (antagonista NMDA) protege neuronas del glutamato excesivo. Ninguno detiene la progresión, solo enlentecen el deterioro. Los antipsicóticos se usan SOLO para síntomas conductuales graves (no para el deterioro cognitivo), con precaución en ancianos (riesgo de ACV, mortalidad aumentada)."
+  },
+  {
+    cat: "urgencia", catLabel: "Psiquiatría de Urgencias",
+    text: "Médico de urgencias atiende a un paciente que trae una carta de suicidio. Está consciente. Refiere que tomó «muchas pastillas» hace 2 horas. ¿Cuál es la acción inicial MÁS importante?",
+    opts: ["Llamar al psiquiatra antes de cualquier intervención médica","Estabilización médica urgente: vía aérea, acceso IV, identificar sustancia, monitorización","Aplicar protocolo de contención mecánica","Administrar naloxona empírica"],
+    correct: 1,
+    exp: "En intoxicación medicamentosa aguda: PRIORIDAD ABSOLUTA es la estabilización médica (ABC: vía aérea, respiración, circulación). Identificar la sustancia (frasco, historia de medicamentos), cuantificar dosis, tiempo transcurrido. Según la sustancia: carbón activado si <1-2h y está consciente, antídoto específico (naloxona para opioides, flumazenil para BZD, N-acetilcisteína para paracetamol). La evaluación psiquiátrica viene DESPUÉS de la estabilización médica. La contención mecánica no es el primer paso si el paciente está consciente y cooperador."
+  },
+  {
+    cat: "ley", catLabel: "Legislación Colombiana",
+    text: "Según la Ley 1616/2013, ¿cuál de los siguientes NO es un derecho explícitamente reconocido al usuario de servicios de salud mental?",
+    opts: ["Recibir tratamiento en el entorno menos restrictivo posible","Comunicarse con su familia y allegados durante la hospitalización","Recibir información sobre su diagnóstico, tratamiento y derechos","Elegir libremente el fármaco que desea recibir sin intervención del médico"],
+    correct: 3,
+    exp: "La Ley 1616/2013 reconoce derechos como: trato digno, atención en entorno menos restrictivo, comunicación con familia y abogado, información sobre diagnóstico y tratamiento, participación en el plan terapéutico, consentimiento informado. Sin embargo, el paciente NO tiene derecho absoluto a ELEGIR el fármaco específico: puede participar en la decisión terapéutica pero la prescripción es responsabilidad médica. Si el paciente rechaza el tratamiento y hay riesgo vital, aplican los criterios de internamiento involuntario."
+  },
+  {
+    cat: "persona", catLabel: "Trastornos de Personalidad",
+    text: "Hombre de 33 años con patrón de evitación de situaciones sociales por miedo intenso a la crítica o al rechazo, baja autoestima, no hace amigos fácilmente aunque desea hacerlos (a diferencia de quien no quiere relacionarse). Se inhibe en situaciones nuevas. ¿Diagnóstico y clúster?",
+    opts: ["Fobia social (trastorno de ansiedad social) · No es trastorno de personalidad","Trastorno de personalidad evasivo (evitativo) · Clúster C","Trastorno de personalidad esquizoide · Clúster A","Trastorno de personalidad dependiente · Clúster C"],
+    correct: 1,
+    exp: "Trastorno de personalidad EVASIVO/EVITATIVO (Clúster C): patrón de inhibición social, sentimientos de inadecuación e hipersensibilidad a la evaluación negativa. CLAVE: desea relacionarse pero evita por miedo al rechazo (diferente al esquizoide que no tiene deseo de contacto). Clúster C (ansioso/temeroso): Evasivo, Dependiente, Obsesivo-compulsivo. Diagnóstico diferencial con fobia social: la fobia social es situacional, el TP evasivo es un patrón global de personalidad. Pueden coexistir."
+  },
+  {
+    cat: "farmaco", catLabel: "Psicofarmacología",
+    text: "Mujer de 55 años con depresión mayor y fibromialgia. ¿Cuál antidepresivo sería de elección para tratar AMBAS condiciones?",
+    opts: ["Fluoxetina (ISRS)","Duloxetina (IRSN)","Amitriptilina (ADT)","Bupropión"],
+    correct: 1,
+    exp: "DULOXETINA (IRSN: inhibidor de recaptación de serotonina y noradrenalina) tiene indicación aprobada tanto para DEPRESIÓN MAYOR como para FIBROMIALGIA, neuropatía diabética y dolor musculoesquelético crónico. La noradrenalina tiene papel modulador en las vías descendentes del dolor. La fluoxetina solo actúa en serotonina (menos efecto analgésico). La amitriptilina tiene algún efecto analgésico pero peor perfil de efectos adversos (anticolinérgicos, cardiotoxicidad). El bupropión no tiene indicación en dolor."
+  },
+  {
+    cat: "psicopat", catLabel: "Psicopatología",
+    text: "Paciente de 40 años consulta por múltiples síntomas físicos (dolor, fatiga, problemas gastrointestinales) que generan angustia significativa. Ha tenido múltiples estudios médicos que no muestran patología orgánica. Los síntomas llevan >6 meses. El paciente cree firmemente que «algo orgánico grave» causa sus síntomas. ¿Diagnóstico en DSM-5?",
+    opts: ["Trastorno de somatización (DSM-IV)","Trastorno de síntomas somáticos (DSM-5)","Hipocondría / trastorno de ansiedad por enfermedad","Trastorno facticio"],
+    correct: 1,
+    exp: "DSM-5 reemplazó 'trastorno de somatización' por TRASTORNO DE SÍNTOMAS SOMÁTICOS: uno o más síntomas somáticos angustiantes con pensamientos, sentimientos o conductas excesivas relacionadas (tiempo/energía desproporcionados, ansiedad elevada sobre la salud, síntomas se perciben como amenazantes) durante >6 meses. No requiere descartar completamente causa orgánica. Diferencia con trastorno de ansiedad por enfermedad: en este último el miedo es a TENER una enfermedad grave aunque los síntomas sean leves o inexistentes."
+  },
+  {
+    cat: "urgencia", catLabel: "Psiquiatría de Urgencias",
+    text: "¿Cuál de los siguientes factores de riesgo es el MÁS asociado a completar un suicidio (no solo intento)?",
+    opts: ["Sexo femenino","Diagnóstico de trastorno de personalidad límite","Intento de suicidio previo","Ideación suicida pasiva sin plan"],
+    correct: 2,
+    exp: "El INTENTO DE SUICIDIO PREVIO es el factor de riesgo más potente predictor de suicidio consumado. Otros factores de alto riesgo: sexo masculino (los hombres consuman más, las mujeres intentan más), adulto mayor, acceso a medios letales, aislamiento social, trastorno mental grave (depresión mayor, esquizofrenia, bipolar), abuso de sustancias, enfermedad médica crónica o terminal, pérdidas recientes. La escala Columbia (C-SSRS) evalúa de forma estructurada la ideación y el comportamiento suicida."
+  },
+];
+
+let current = 0;
+let score = 0;
+let answered = false;
+let results = [];
+const catScores = { psicopat:0, farmaco:0, urgencia:0, persona:0, ley:0 };
+const catTotals = { psicopat:0, farmaco:0, urgencia:0, persona:0, ley:0 };
+
+const catMap = {
+  psicopat: 'cat-psicopat',
+  farmaco: 'cat-farmaco',
+  urgencia: 'cat-urgencia',
+  persona: 'cat-persona',
+  ley: 'cat-ley'
+};
+
+function renderQuestion() {
+  const q = questions[current];
+  catTotals[q.cat]++;
+  answered = false;
+  document.getElementById('prog-label').textContent = `Pregunta ${current+1} de ${questions.length}`;
+  document.getElementById('score-label').textContent = `Correctas: ${score}`;
+  document.getElementById('prog-bar').style.width = `${(current/questions.length)*100}%`;
+  document.getElementById('btn-next').classList.remove('visible');
+
+  const letters = ['A','B','C','D'];
+  const html = `
+    <div class="question-card">
+      <div class="cat-badge ${catMap[q.cat]}">${q.catLabel}</div>
+      <div class="q-number">Pregunta ${current+1} · ${q.cat === 'psicopat' ? 'Psicopatología' : q.catLabel}</div>
+      <div class="q-text">${q.text}</div>
+      <div class="options" id="options">
+        ${q.opts.map((o,i) => `
+          <button class="option" onclick="selectAnswer(${i})" id="opt-${i}">
+            <span class="option-letter">${letters[i]}</span>
+            <span class="option-text">${o}</span>
+          </button>
+        `).join('')}
+      </div>
+      <div class="feedback" id="feedback"></div>
+    </div>
+  `;
+  document.getElementById('question-container').innerHTML = html;
+}
+
+function selectAnswer(idx) {
+  if (answered) return;
+  answered = true;
+  const q = questions[current];
+  const isCorrect = idx === q.correct;
+  if (isCorrect) {
+    score++;
+    catScores[q.cat]++;
+  }
+  results.push({ q: q.text.slice(0,90)+'...', correct: isCorrect, exp: q.exp, cat: q.catLabel });
+
+  // Disable all options
+  for (let i = 0; i < q.opts.length; i++) {
+    const btn = document.getElementById(`opt-${i}`);
+    btn.disabled = true;
+    if (i === q.correct) btn.classList.add('correct');
+    else if (i === idx && !isCorrect) btn.classList.add('wrong');
+  }
+
+  const fb = document.getElementById('feedback');
+  fb.className = `feedback ${isCorrect ? 'correct-fb' : 'wrong-fb'}`;
+  fb.innerHTML = `<strong>${isCorrect ? '✓ CORRECTO' : '✗ INCORRECTO'}</strong>${q.exp}`;
+
+  document.getElementById('score-label').textContent = `Correctas: ${score}`;
+  document.getElementById('btn-next').classList.add('visible');
+  document.getElementById('btn-next').textContent = current < questions.length - 1 ? 'Siguiente →' : 'Ver Resultados →';
+}
+
+function nextQuestion() {
+  current++;
+  if (current >= questions.length) {
+    showScore();
+  } else {
+    renderQuestion();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+}
+
+function showScore() {
+  document.getElementById('quiz-area').style.display = 'none';
+  const ss = document.getElementById('score-screen');
+  ss.classList.add('visible');
+
+  const pct = Math.round((score / questions.length) * 100);
+  document.getElementById('final-score').textContent = score;
+  document.getElementById('final-total').textContent = `/ ${questions.length}`;
+  document.getElementById('prog-bar').style.width = '100%';
+
+  let title, msg;
+  if (pct >= 80) {
+    title = '¡Excelente preparación!';
+    msg = `Obtuviste ${score} de ${questions.length} (${pct}%). Dominas los temas clave. Repasa los errores y refuerza los detalles farmacológicos el viernes.`;
+  } else if (pct >= 60) {
+    title = 'Buen avance, a reforzar';
+    msg = `Obtuviste ${score} de ${questions.length} (${pct}%). Hay áreas sólidas. Dedica tiempo extra a los bloques donde fallaste. Revisa cada explicación con cuidado.`;
+  } else {
+    title = 'Hay trabajo por hacer';
+    msg = `Obtuviste ${score} de ${questions.length} (${pct}%). Concentra el estudio en los temas con más errores. Regresa a los criterios diagnósticos clave y los fármacos de primera línea.`;
+  }
+  document.getElementById('score-title').textContent = title;
+  document.getElementById('score-msg').textContent = msg;
+
+  // Category breakdown
+  const catNames = { psicopat:'Psicopatología', farmaco:'Psicofarmacología', urgencia:'Urgencias', persona:'Personalidad', ley:'Legislación' };
+  const bd = document.getElementById('score-breakdown');
+  bd.innerHTML = Object.keys(catNames).map(k => `
+    <div class="score-cat">
+      <div class="score-cat-name">${catNames[k]}</div>
+      <div class="score-cat-val">${catScores[k]} <span>/ ${catTotals[k]}</span></div>
+    </div>
+  `).join('');
+
+  // Review
+  const rl = document.getElementById('review-list');
+  const wrong = results.filter(r => !r.correct);
+  if (wrong.length === 0) {
+    rl.innerHTML = '<div class="review-title">TODAS LAS PREGUNTAS CORRECTAS ✓</div>';
+  } else {
+    rl.innerHTML = `<div class="review-title">REVISAR: ERRORES (${wrong.length})</div>` +
+      wrong.map(r => `
+        <div class="review-item">
+          <div class="ri-q">${r.q}</div>
+          <div class="ri-status ri-wrong">✗ ${r.cat}</div>
+          <div class="ri-exp">${r.exp}</div>
+        </div>
+      `).join('');
+  }
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function restartQuiz() {
+  current = 0; score = 0; answered = false; results = [];
+  Object.keys(catScores).forEach(k => catScores[k] = 0);
+  Object.keys(catTotals).forEach(k => catTotals[k] = 0);
+  document.getElementById('quiz-area').style.display = 'block';
+  document.getElementById('score-screen').classList.remove('visible');
+  renderQuestion();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+renderQuestion();
+</script>
+</body>
+</html>
