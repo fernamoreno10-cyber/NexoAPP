@@ -37,3 +37,7 @@ export function calcTotalAdicionales(adicionales: Adicionales): number {
   ]
   return rows.reduce((sum, r) => sum + r.qty * r.precioUnitario, 0)
 }
+
+export function calcTotalReporte(servicios: Servicios, adicionales: Adicionales): number {
+  return calcTotalServicios(servicios) + calcTotalAdicionales(adicionales)
+}
