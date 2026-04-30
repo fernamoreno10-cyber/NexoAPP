@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { ItemsEditor } from '@/components/nexo/items-editor'
 import { getCobroById } from '@/actions/cobros'
-import { generarReporteCliente } from '@/actions/reportes-cliente'
+import { generarReporteCliente, getReporteClienteByCobro } from '@/actions/reportes-cliente'
 import { formatCOP } from '@/lib/utils'
 import { ArrowLeft, Download } from 'lucide-react'
 import Link from 'next/link'
@@ -24,12 +24,16 @@ export default function CobroDetailPage() {
   const [numeroFactura, setNumeroFactura] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [pdfLoading, setPdfLoading] = useState(false)
+  const [reporteClienteId, setReporteClienteId] = useState<string | null>(null)
 
   useEffect(() => {
     getCobroById(id).then(c => {
       if (!c) return
       setCobro(c)
       setItems(c.items.map(i => ({ ...i, id: crypto.randomUUID() })))
+      if (c.status === 'enviado') {
+        getReporteClienteByCobro(c.id).then(r => setReporteClienteId(r?.id ?? null))
+      }
     })
   }, [id])
 
@@ -62,7 +66,7 @@ export default function CobroDetailPage() {
     setSubmitting(false)
     if (result.error) { toast.error(result.error); return }
     toast.success('Reporte cliente generado')
-    router.push('/admin/reportes')
+    router.push(`/admin/reportes-cliente/${result.id}`)
   }
 
   if (!cobro) return <div className="p-8 text-zinc-500">Cargando...</div>
@@ -110,6 +114,13 @@ export default function CobroDetailPage() {
       <Button onClick={handleGenerar} disabled={submitting || cobro.status === 'enviado'} className="w-full mt-5 bg-gradient-to-r from-teal-500 to-green-500 text-black font-bold">
         {submitting ? 'Generando...' : cobro.status === 'enviado' ? 'Reporte ya generado' : 'Generar reporte cliente final →'}
       </Button>
+      {cobro.status === 'enviado' && reporteClienteId && (
+        <Link href={`/admin/reportes-cliente/${reporteClienteId}`}>
+          <Button variant="outline" className="w-full mt-3 border-teal-500/30 text-teal-400 hover:bg-teal-500/10">
+            Ver reporte cliente generado →
+          </Button>
+        </Link>
+      )}
     </div>
   )
 }

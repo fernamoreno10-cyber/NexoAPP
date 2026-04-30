@@ -44,6 +44,16 @@ export async function generarReporteCliente(
   return { id: reporte.id }
 }
 
+export async function getReporteClienteByCobro(cobroId: string): Promise<NexoReporteCliente | null> {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('nexo_reportes_cliente')
+    .select('id')
+    .eq('cobro_id', cobroId)
+    .maybeSingle()
+  return data as NexoReporteCliente | null
+}
+
 export async function getReporteClienteById(id: string): Promise<NexoReporteCliente | null> {
   const supabase = await createClient()
   const { data } = await supabase
