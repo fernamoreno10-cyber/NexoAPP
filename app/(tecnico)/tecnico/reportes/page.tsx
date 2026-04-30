@@ -59,7 +59,7 @@ export default async function TecnicoReportesPage() {
                     #{String(r.numero).padStart(4, '0')}
                   </p>
                   <p className="font-bold text-white truncate">
-                    {(r.nexo_clientes as any)?.nombre ?? r.cliente_id}
+                    {r.nexo_clientes?.nombre ?? r.cliente_id}
                   </p>
                   <p className="text-xs text-zinc-500 mt-0.5">
                     {formatDate(r.fecha)} · {r.hora} · {r.tipo_visita}

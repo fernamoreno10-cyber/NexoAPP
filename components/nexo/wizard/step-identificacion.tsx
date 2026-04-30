@@ -1,5 +1,6 @@
 'use client'
 
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
@@ -56,7 +57,7 @@ export function StepIdentificacion({ data, clientes, onChange, onNext }: Props) 
 
   function handleNext() {
     const err = validate()
-    if (err) { alert(err); return }
+    if (err) { toast.error(err); return }
     onNext()
   }
 

@@ -1,5 +1,6 @@
 'use client'
 
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -142,7 +143,7 @@ export function StepServicios({ data, onChange, onNext, onBack }: Props) {
 
       <div className="flex gap-3 pt-2">
         <Button variant="outline" onClick={onBack} className="flex-1 border-zinc-700 text-zinc-400">← Atrás</Button>
-        <Button onClick={() => { const err = validate(); if (err) { alert(err); return } onNext() }} className="flex-1 bg-gradient-to-r from-teal-500 to-green-500 text-black font-bold">Siguiente →</Button>
+        <Button onClick={() => { const err = validate(); if (err) { toast.error(err); return } onNext() }} className="flex-1 bg-gradient-to-r from-teal-500 to-green-500 text-black font-bold">Siguiente →</Button>
       </div>
     </div>
   )
