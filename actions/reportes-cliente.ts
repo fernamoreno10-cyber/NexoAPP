@@ -44,6 +44,34 @@ export async function generarReporteCliente(
   return { id: reporte.id }
 }
 
+export async function getReportesCliente(): Promise<NexoReporteCliente[]> {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('nexo_reportes_cliente')
+    .select('*, nexo_clientes(nombre), nexo_cobros_ferreteria(nexo_reportes_tecnicos(numero, fecha))')
+    .order('created_at', { ascending: false })
+  return (data as NexoReporteCliente[]) ?? []
+}
+
+export async function updateReporteCliente(
+  id: string, items: CobrosItem[], notas: string, numeroFactura: string
+): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autorizado.' }
+
+  const total = items.reduce((s, i) => s + i.subtotal, 0)
+  const { error } = await supabase
+    .from('nexo_reportes_cliente')
+    .update({ items, total, notas: notas || null, numero_factura: numeroFactura || null })
+    .eq('id', id)
+  if (error) return { error: error.message }
+
+  revalidatePath('/admin/reportes-cliente')
+  revalidatePath(`/admin/reportes-cliente/${id}`)
+  return {}
+}
+
 export async function getReporteClienteByCobro(cobroId: string): Promise<NexoReporteCliente | null> {
   const supabase = await createClient()
   const { data } = await supabase

@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, ClipboardList, Plus, FileText,
-  DollarSign, Users, UserCog, LogOut
+  DollarSign, Users, UserCog, LogOut, Receipt
 } from 'lucide-react'
 import { logout } from '@/actions/auth'
 import { cn } from '@/lib/utils'
@@ -22,6 +22,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['admin'] },
   { href: '/admin/reportes', label: 'Reportes técnicos', icon: ClipboardList, roles: ['admin'] },
   { href: '/admin/cobros', label: 'Cobros ferretería', icon: DollarSign, roles: ['admin'] },
+  { href: '/admin/reportes-cliente', label: 'Reportes cliente', icon: Receipt, roles: ['admin'] },
   { href: '/admin/clientes', label: 'Clientes', icon: Users, roles: ['admin'] },
   { href: '/admin/usuarios', label: 'Usuarios', icon: UserCog, roles: ['admin'] },
   { href: '/tecnico/nueva-visita', label: 'Nueva visita', icon: Plus, roles: ['tecnico', 'admin'] },
