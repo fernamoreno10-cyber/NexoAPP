@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label'
 import { ItemsEditor } from '@/components/nexo/items-editor'
 import { getReporteById, generarCobro } from '@/actions/cobros'
 import { formatCOP, formatDate, calcTotalReporte } from '@/lib/utils'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Download } from 'lucide-react'
 import Link from 'next/link'
 import type { NexoReporteTecnico, CobrosItem } from '@/types/nexo'
 
@@ -31,6 +31,8 @@ export default function ReporteDetailPage() {
   const [items, setItems] = useState<CobrosItem[]>([])
   const [notas, setNotas] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [pdfLoading, setPdfLoading] = useState(false)
+  const [campoLoading, setCampoLoading] = useState(false)
 
   useEffect(() => {
     getReporteById(id).then(r => {
@@ -39,6 +41,48 @@ export default function ReporteDetailPage() {
       setItems(buildItemsFromReporte(r))
     })
   }, [id])
+
+  async function handleDescargarCampo() {
+    if (!reporte) return
+    setCampoLoading(true)
+    try {
+      const { pdf } = await import('@react-pdf/renderer')
+      const { ReporteCampoPDF } = await import('@/lib/pdf/reporte-campo')
+      const blob = await pdf(<ReporteCampoPDF reporte={reporte} />).toBlob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `CAMPO-${String(reporte.numero).padStart(4, '0')}.pdf`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error(err)
+      toast.error('Error al generar el PDF')
+    } finally {
+      setCampoLoading(false)
+    }
+  }
+
+  async function handleDescargarPDF() {
+    if (!reporte) return
+    setPdfLoading(true)
+    try {
+      const { pdf } = await import('@react-pdf/renderer')
+      const { ReporteTecnicoPDF } = await import('@/lib/pdf/reporte-tecnico')
+      const blob = await pdf(<ReporteTecnicoPDF reporte={reporte} />).toBlob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `RPT-${String(reporte.numero).padStart(4, '0')}.pdf`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error(err)
+      toast.error('Error al generar el PDF')
+    } finally {
+      setPdfLoading(false)
+    }
+  }
 
   async function handleGenerar() {
     if (!reporte || items.length === 0) { toast.error('Agrega al menos un ítem'); return }
@@ -66,6 +110,16 @@ export default function ReporteDetailPage() {
         <div className="flex justify-between mt-3">
           <span className="text-xs text-zinc-500">Total técnico:</span>
           <span className="text-sm font-bold text-zinc-300">{formatCOP(totalTecnico)}</span>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">
+          <Button onClick={handleDescargarCampo} disabled={campoLoading} variant="outline" size="sm" className="border-zinc-700 text-zinc-200 hover:bg-zinc-800">
+            <Download className="w-3.5 h-3.5 mr-1.5" />
+            {campoLoading ? 'Generando...' : 'PDF para cliente final (sin precios)'}
+          </Button>
+          <Button onClick={handleDescargarPDF} disabled={pdfLoading} variant="outline" size="sm" className="border-teal-500/30 text-teal-400 hover:bg-teal-500/10">
+            <Download className="w-3.5 h-3.5 mr-1.5" />
+            {pdfLoading ? 'Generando...' : 'PDF reporte técnico (con precios)'}
+          </Button>
         </div>
       </div>
       <h2 className="text-sm font-bold text-white uppercase tracking-wide mb-3">Ítems cobro ferretería</h2>

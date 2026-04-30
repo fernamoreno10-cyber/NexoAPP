@@ -11,7 +11,7 @@ import { ItemsEditor } from '@/components/nexo/items-editor'
 import { getCobroById } from '@/actions/cobros'
 import { generarReporteCliente } from '@/actions/reportes-cliente'
 import { formatCOP } from '@/lib/utils'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Download } from 'lucide-react'
 import Link from 'next/link'
 import type { NexoCobroFerreteria, CobrosItem } from '@/types/nexo'
 
@@ -23,6 +23,7 @@ export default function CobroDetailPage() {
   const [notas, setNotas] = useState('')
   const [numeroFactura, setNumeroFactura] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [pdfLoading, setPdfLoading] = useState(false)
 
   useEffect(() => {
     getCobroById(id).then(c => {
@@ -31,6 +32,28 @@ export default function CobroDetailPage() {
       setItems(c.items.map(i => ({ ...i, id: crypto.randomUUID() })))
     })
   }, [id])
+
+  async function handleDescargarPDF() {
+    if (!cobro) return
+    setPdfLoading(true)
+    try {
+      const { pdf } = await import('@react-pdf/renderer')
+      const { CobroFerreteriaPDF } = await import('@/lib/pdf/cobro-ferreteria')
+      const blob = await pdf(<CobroFerreteriaPDF cobro={cobro} />).toBlob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      const num = String((cobro.nexo_reportes_tecnicos as any)?.numero ?? 0).padStart(4, '0')
+      a.download = `COB-${num}.pdf`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error(err)
+      toast.error('Error al generar el PDF')
+    } finally {
+      setPdfLoading(false)
+    }
+  }
 
   async function handleGenerar() {
     if (!cobro || items.length === 0) { toast.error('Agrega al menos un ítem'); return }
@@ -58,6 +81,10 @@ export default function CobroDetailPage() {
           <span className="text-xs text-zinc-500">Total cobro ferretería:</span>
           <span className="text-sm font-bold text-zinc-300">{formatCOP(totalCobro)}</span>
         </div>
+        <Button onClick={handleDescargarPDF} disabled={pdfLoading} variant="outline" size="sm" className="mt-3 w-full border-purple-500/30 text-purple-300 hover:bg-purple-500/10">
+          <Download className="w-3.5 h-3.5 mr-1.5" />
+          {pdfLoading ? 'Generando...' : 'Descargar cobro ferretería (PDF)'}
+        </Button>
       </div>
       <h2 className="text-sm font-bold text-white uppercase tracking-wide mb-1">Ítems reporte cliente final</h2>
       <p className="text-xs text-zinc-500 mb-4">Ajusta precios. Estos son los valores que verá el cliente final.</p>
