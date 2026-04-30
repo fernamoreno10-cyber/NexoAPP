@@ -27,6 +27,9 @@ export async function generarCobro(
   reporteId: string, clienteId: string, items: CobrosItem[], notas: string
 ): Promise<{ error?: string; id?: string }> {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autorizado.' }
+
   const total = items.reduce((s, i) => s + i.subtotal, 0)
   const { data: cobro, error } = await supabase
     .from('nexo_cobros_ferreteria')
@@ -34,7 +37,13 @@ export async function generarCobro(
     .select('id')
     .single()
   if (error) return { error: error.message }
-  await supabase.from('nexo_reportes_tecnicos').update({ status: 'revisado' }).eq('id', reporteId)
+
+  const { error: updateErr } = await supabase
+    .from('nexo_reportes_tecnicos')
+    .update({ status: 'revisado' })
+    .eq('id', reporteId)
+  if (updateErr) return { error: updateErr.message }
+
   revalidatePath('/admin/reportes')
   revalidatePath('/admin/cobros')
   return { id: cobro.id }

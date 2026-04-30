@@ -21,21 +21,22 @@ export default async function DashboardPage() {
     { data: pendientes },
     { data: cobros },
     { data: recientes },
+    { data: facturados },
   ] = await Promise.all([
     supabase.from('nexo_reportes_tecnicos').select('id').gte('created_at', firstOfMonth),
     supabase.from('nexo_reportes_tecnicos').select('id').eq('status', 'pendiente'),
     supabase.from('nexo_cobros_ferreteria').select('total').gte('created_at', firstOfMonth),
     supabase.from('nexo_reportes_tecnicos').select('*, nexo_clientes(nombre), nexo_usuarios(nombre)').order('created_at', { ascending: false }).limit(5),
+    supabase.from('nexo_reportes_tecnicos').select('id').eq('status', 'cobrado').gte('created_at', firstOfMonth),
   ])
 
   const totalCobrado = (cobros ?? []).reduce((s: number, c: any) => s + (c.total ?? 0), 0)
-  const reportesEnviados = (recientes ?? []).filter((r: any) => r.status === 'cobrado').length
 
   const stats = [
     { label: 'Reportes este mes', value: reportesMes?.length ?? 0, color: 'text-teal-400' },
     { label: 'Pendientes revisión', value: pendientes?.length ?? 0, color: 'text-yellow-400' },
     { label: 'Cobrado ferretería', value: formatCOP(totalCobrado), color: 'text-green-400' },
-    { label: 'Últimos facturados', value: reportesEnviados, color: 'text-teal-400' },
+    { label: 'Facturados este mes', value: facturados?.length ?? 0, color: 'text-teal-400' },
   ]
 
   return (

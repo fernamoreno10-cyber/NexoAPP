@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createServiceClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 import type { NexoUsuario } from '@/types/nexo'
 
 export async function getUsuarios(): Promise<NexoUsuario[]> {
@@ -11,8 +12,12 @@ export async function getUsuarios(): Promise<NexoUsuario[]> {
 }
 
 export async function createUsuario(formData: FormData): Promise<{ error?: string }> {
-  const email = (formData.get('email') as string).trim()
-  const nombre = (formData.get('nombre') as string).trim()
+  const anonClient = await createClient()
+  const { data: { user } } = await anonClient.auth.getUser()
+  if (!user) return { error: 'No autorizado.' }
+
+  const email = ((formData.get('email') ?? '') as string).trim()
+  const nombre = ((formData.get('nombre') ?? '') as string).trim()
   const rol = formData.get('rol') as 'tecnico' | 'admin'
   if (!email || !nombre || !rol) return { error: 'Todos los campos son obligatorios.' }
 
@@ -34,23 +39,39 @@ export async function createUsuario(formData: FormData): Promise<{ error?: strin
 }
 
 export async function resetPassword(id: string): Promise<{ error?: string }> {
+  const anonClient = await createClient()
+  const { data: { user } } = await anonClient.auth.getUser()
+  if (!user) return { error: 'No autorizado.' }
+
   const supabase = await createServiceClient()
   const { data: nexoUser } = await supabase.from('nexo_usuarios').select('auth_user_id').eq('id', id).single()
   if (!nexoUser) return { error: 'Usuario no encontrado.' }
+
   const { error: authError } = await supabase.auth.admin.updateUserById(nexoUser.auth_user_id, { password: '1234' })
   if (authError) return { error: authError.message }
+
   const { error } = await supabase.from('nexo_usuarios').update({ must_change_password: true }).eq('id', id)
   if (error) return { error: error.message }
+
   revalidatePath('/admin/usuarios')
   return {}
 }
 
 export async function deleteUsuario(id: string): Promise<{ error?: string }> {
+  const anonClient = await createClient()
+  const { data: { user } } = await anonClient.auth.getUser()
+  if (!user) return { error: 'No autorizado.' }
+
   const supabase = await createServiceClient()
   const { data: nexoUser } = await supabase.from('nexo_usuarios').select('auth_user_id').eq('id', id).single()
   if (!nexoUser) return { error: 'Usuario no encontrado.' }
-  await supabase.from('nexo_usuarios').delete().eq('id', id)
-  await supabase.auth.admin.deleteUser(nexoUser.auth_user_id)
+
+  const { error: dbError } = await supabase.from('nexo_usuarios').delete().eq('id', id)
+  if (dbError) return { error: dbError.message }
+
+  const { error: authError } = await supabase.auth.admin.deleteUser(nexoUser.auth_user_id)
+  if (authError) return { error: authError.message }
+
   revalidatePath('/admin/usuarios')
   return {}
 }

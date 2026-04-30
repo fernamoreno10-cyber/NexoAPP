@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Download } from 'lucide-react'
 import type { NexoReporteCliente } from '@/types/nexo'
@@ -25,6 +26,9 @@ export function PdfDownloadButton({ reporte, filename = 'reporte-nexo.pdf' }: Pr
       a.download = filename
       a.click()
       URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error(err)
+      toast.error('Error al generar el PDF')
     } finally {
       setLoading(false)
     }

@@ -8,6 +8,9 @@ export async function generarReporteCliente(
   cobroId: string, clienteId: string, items: CobrosItem[], notas: string, numeroFactura: string
 ): Promise<{ error?: string; id?: string }> {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autorizado.' }
+
   const total = items.reduce((s, i) => s + i.subtotal, 0)
   const { data: reporte, error } = await supabase
     .from('nexo_reportes_cliente')
@@ -16,12 +19,26 @@ export async function generarReporteCliente(
     .single()
   if (error) return { error: error.message }
 
-  await supabase.from('nexo_cobros_ferreteria').update({ status: 'enviado' }).eq('id', cobroId)
+  const { error: cobroErr } = await supabase
+    .from('nexo_cobros_ferreteria')
+    .update({ status: 'enviado' })
+    .eq('id', cobroId)
+  if (cobroErr) return { error: cobroErr.message }
 
-  const { data: cobro } = await supabase.from('nexo_cobros_ferreteria').select('reporte_id').eq('id', cobroId).single()
+  const { data: cobro } = await supabase
+    .from('nexo_cobros_ferreteria')
+    .select('reporte_id')
+    .eq('id', cobroId)
+    .single()
+
   if (cobro?.reporte_id) {
-    await supabase.from('nexo_reportes_tecnicos').update({ status: 'cobrado' }).eq('id', cobro.reporte_id)
+    const { error: reporteErr } = await supabase
+      .from('nexo_reportes_tecnicos')
+      .update({ status: 'cobrado' })
+      .eq('id', cobro.reporte_id)
+    if (reporteErr) return { error: reporteErr.message }
   }
+
   revalidatePath('/admin/cobros')
   revalidatePath('/admin/reportes')
   return { id: reporte.id }
@@ -41,7 +58,7 @@ export async function getReporteClienteByToken(token: string): Promise<NexoRepor
   const supabase = await createClient()
   const { data } = await supabase
     .from('nexo_reportes_cliente')
-    .select('*, nexo_clientes(*)')
+    .select('*, nexo_clientes(*), nexo_cobros_ferreteria(*, nexo_reportes_tecnicos(numero, fecha))')
     .eq('share_token', token)
     .single()
   return data as NexoReporteCliente | null
